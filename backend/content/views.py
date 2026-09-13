@@ -66,21 +66,18 @@ class WriteupList(generics.ListAPIView):
 class ContactCreate(APIView):
     def post(self, request):
         serializer = ContactMessageSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        message = serializer.save()
+        # Invalid input returns HTTP 400 with field errors.
+        serializer.is_valid(raise_exception=True)
 
-        # Email notification (silently skipped if email isn't configured)
-        try:
-            send_mail(
-                subject=f"[SaifSec Contact] {message.subject}",
-                message=f"From: {message.name} <{message.email}>\n\n{message.message}",
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                recipient_list=[getattr(settings, "CONTACT_RECEIVER_EMAIL", "")],
-                fail_silently=True,
-            )
-        except Exception:
-            pass
+        # Save the submission to the database.
+        serializer.save()
 
-        return Response({"ok": True}, status=status.HTTP_201_CREATED)
+        # Confirm receipt, not email delivery.
+        return Response(
+            {
+                "ok": True,
+                "message": "Your message has been received.",
+            },
+            status=status.HTTP_201_CREATED,
+        )
