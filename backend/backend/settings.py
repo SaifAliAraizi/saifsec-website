@@ -8,7 +8,6 @@ from pathlib import Path
 
 from decouple import config, Csv
 import dj_database_url
-import cloudinary
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -140,15 +139,6 @@ STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-
-
-# ============================================================
-# MEDIA FILES → CLOUDINARY
-# ============================================================
-
-cloudinary.config(
-    cloudinary_url=config("CLOUDINARY_URL")
-)
 
 # ============================================================
 # MEDIA FILES → CLOUDINARY
