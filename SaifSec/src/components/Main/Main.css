@@ -1,0 +1,13 @@
+.main-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #090e14;
+}
+
+.portfolio-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #090e14;
+}

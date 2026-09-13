@@ -1,0 +1,164 @@
+.services-section {
+  flex: 1;
+  width: 100%;
+  padding: 50px 5vw 60px;
+  background: #090e14;
+}
+
+.services-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 22px;
+}
+
+.service-card {
+  position: relative;
+  min-height: 170px;
+  padding: 20px 14px 22px;
+  border: 1px solid #1f4f8c;
+  border-radius: 6px;
+  background: #0f1621;
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* subtle glow layer */
+.service-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top left,
+    rgba(59, 130, 246, 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  border-color: #3b82f6;
+  box-shadow: 0 10px 30px rgba(31, 79, 140, 0.35);
+}
+
+.service-card:hover::before {
+  opacity: 1;
+}
+
+.service-icon {
+  margin-bottom: 8px;
+  color: #4ea1ff;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.service-title {
+  margin-bottom: 10px;
+  color: #7f8a99;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  transition: color 0.25s ease;
+}
+
+.service-card:hover .service-title {
+  color: #e6edf6;
+}
+
+.service-description {
+  color: #8a95a3;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* Responsive */
+@media screen and (max-width: 700px) {
+  .services-section {
+    padding: 35px 5vw 45px;
+  }
+
+  .services-container {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .service-card {
+    min-height: auto;
+  }
+
+  .service-title {
+    font-size: 20px;
+  }
+}
+
+
+/* API loading, error and empty states */
+
+.services-state {
+  width: min(600px, 100%);
+  min-height: 300px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #9aa5b5;
+  text-align: center;
+}
+
+.services-state h2 {
+  color: #edf2f7;
+  font-size: 22px;
+}
+
+.services-state p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.services-state code {
+  color: #4ff0e4;
+}
+
+.services-state button {
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid #31506a;
+  border-radius: 5px;
+  background: #141f2a;
+  color: #4ff0e4;
+  font-family: "JetBrains Mono", monospace;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.services-state button:hover {
+  border-color: #4ff0e4;
+  background: #1d2c3c;
+}
+
+.services-error h2 {
+  color: #ff7b7b;
+}
+
+.services-loader {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #1d3544;
+  border-top-color: #4ff0e4;
+  border-radius: 50%;
+  animation: services-spin 0.8s linear infinite;
+}
+
+@keyframes services-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,177 @@
+.labs-section {
+  flex: 1;
+  width: 100%;
+  min-height: 60vh;
+  padding: 50px 5vw 70px;
+  background: #090e14;
+}
+
+.labs-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.labs-heading {
+  color: #f3f6fb;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 28px;
+}
+
+.labs-coming-soon,
+.labs-state {
+  color: #8a95a3;
+  font-size: 14px;
+}
+
+.labs-state button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: 1px solid #31506a;
+  border-radius: 5px;
+  background: #141f2a;
+  color: #4ff0e4;
+  cursor: pointer;
+}
+
+.labs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.lab-card {
+  display: block;
+  padding: 22px 20px;
+  border: 1px solid #1f2a38;
+  border-radius: 6px;
+  background: #121824;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.lab-card:hover {
+  border-color: #4ff0e4;
+  transform: translateY(-3px);
+}
+
+.lab-card h2 {
+  color: #edf2f7;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.lab-card p {
+  color: #8a95a3;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.labs-back {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: #4ff0e4;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+/* Detail layout */
+.lab-detail-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.lab-toc {
+  position: sticky;
+  top: 24px;
+  padding: 8px 0;
+  border-right: 1px solid #1c2635;
+}
+
+.lab-toc-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px 14px 0;
+  border: none;
+  border-bottom: 1px solid #1c2635;
+  background: none;
+  color: #6b778c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+
+.lab-toc-item {
+  display: block;
+  width: 100%;
+  padding: 10px 8px 10px 0;
+  border: none;
+  background: none;
+  color: #9aa5b5;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lab-toc-item:hover {
+  color: #4ff0e4;
+}
+
+.lab-article-title {
+  color: #c9a227;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.lab-article-subtitle {
+  color: #edf2f7;
+  font-size: 16px;
+  margin-bottom: 22px;
+}
+
+.lab-article-block {
+  scroll-margin-top: 24px;
+  margin-bottom: 28px;
+}
+
+.lab-article-block h2 {
+  color: #edf2f7;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.lab-article-block p {
+  color: #9aa5b5;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.lab-article-image {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  margin: 18px 0;
+  border: 1px solid #1f2a38;
+}
+
+@media (max-width: 800px) {
+  .lab-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .lab-toc {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #1c2635;
+    padding-bottom: 16px;
+  }
+}

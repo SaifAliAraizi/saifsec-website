@@ -1,0 +1,140 @@
+.hero-section {
+  flex: 1;
+  min-height: 450px;
+  padding: 8vh 6vw 70px;
+  background: #090e14;
+}
+
+.hero-content {
+    position: relative;
+    max-width: 758px;
+    margin: 0 auto;
+}
+
+.hero-name {
+    margin: 0 0 22px 4px;
+    color: #f3f6fb;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.8px;
+}
+
+.hero-card-container {
+    position: relative;
+    min-height: 268px;
+    overflow: visible;
+}
+
+.hero-card-shadow {
+    position: absolute;
+    z-index: 1;
+    top: 38px;
+    left: 18px;
+    width: calc(100% - 8px);
+    height: 228px;
+    border: 2px solid #2a3444;
+    background: transparent;
+    pointer-events: none;
+}
+
+.hero-card {
+    position: relative;
+    z-index: 2;
+    width: calc(100% - 18px);
+    min-height: 228px;
+    overflow: visible;
+    border: 1px solid #2b3648;
+    background: linear-gradient(90deg,
+            #161d29 0%,
+            #1c2535 48%,
+            #3f5478 78%,
+            #5b73a0 100%);
+}
+
+.hero-text {
+    position: relative;
+    z-index: 3;
+    max-width: 430px;
+    padding: 16px 18px 20px;
+}
+
+.hero-text h2 {
+    margin: 0 0 12px;
+    color: #4ff0e4;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.6px;
+}
+
+.hero-text p {
+    max-width: 410px;
+    color: #d8dde6;
+    font-size: 15.2px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+.hero-profile-image {
+    position: absolute;
+    z-index: 5;
+    right: -6px;
+    bottom: 2px;
+    width: 300px;
+    height: 390px;
+    object-fit: contain;
+    object-position: bottom center;
+    pointer-events: none;
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+}
+
+@media screen and (max-width: 820px) {
+    .hero-section {
+        padding: 60px 40px 40px;
+    }
+
+    .hero-profile-image {
+        width: 250px;
+        height: 330px;
+    }
+}
+
+@media screen and (max-width: 650px) {
+    .hero-section {
+        padding: 40px 18px 30px;
+    }
+
+    .hero-name {
+        font-size: 26px;
+    }
+
+    .hero-card-container {
+        min-height: auto;
+    }
+
+    .hero-card-shadow {
+        display: none;
+    }
+
+    .hero-card {
+        width: 100%;
+    }
+
+    .hero-text {
+        max-width: 100%;
+        padding: 20px 18px 250px;
+    }
+
+    .hero-text h2 {
+        font-size: 24px;
+    }
+
+    .hero-profile-image {
+        right: 50%;
+        bottom: 0;
+        width: 230px;
+        height: 280px;
+        transform: translateX(50%);
+    }
+}

@@ -1,0 +1,71 @@
+.navbar {
+  width: 100%;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5vw;
+  background: #151b26;
+}
+
+.navbar-logo-container {
+  width: 80px;
+  min-width: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.navbar-logo {
+  width: 72px;
+  height: auto;
+  object-fit: contain;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 0 10px;
+}
+
+.navbar-links a {
+  color: #4fe8dc;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  transition: 0.2s ease;
+}
+
+.navbar-links a:hover {
+  color: #ffffff;
+  text-shadow: 0 0 8px #54e8dc;
+}
+
+@media screen and (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 10px 5vw;
+    gap: 10px;
+  }
+
+  .navbar-links {
+    gap: 10px;
+  }
+}
+
+.navbar-links .nav-link {
+  color: #4fe8dc;
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(11px, 1.2vw, 14px);
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.navbar-links .nav-link:hover,
+.navbar-links .active-nav-link {
+  color: #ffffff;
+  text-shadow: 0 0 8px #54e8dc;
+}
