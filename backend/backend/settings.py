@@ -90,13 +90,20 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # DATABASE
 # ============================================================
 
+DATABASE_URL = config("DATABASE_URL", default="").strip()
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is missing. Add it in Render → Environment Variables."
+    )
+
 DATABASES = {
     "default": dj_database_url.parse(
-        config("DATABASE_URL"),
+        DATABASE_URL,
         conn_max_age=600,
+        ssl_require=not DEBUG,
     )
 }
-
 
 # ============================================================
 # PASSWORD VALIDATION
@@ -144,16 +151,34 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # MEDIA FILES → CLOUDINARY
 # ============================================================
 
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
-    "API_KEY": config("CLOUDINARY_API_KEY"),
-    "API_SECRET": config("CLOUDINARY_API_SECRET"),
-}
+CLOUDINARY_CLOUD_NAME = config("CLOUDINARY_CLOUD_NAME", default="")
+CLOUDINARY_API_KEY = config("CLOUDINARY_API_KEY", default="")
+CLOUDINARY_API_SECRET = config("CLOUDINARY_API_SECRET", default="")
+
+if (
+    CLOUDINARY_CLOUD_NAME
+    and CLOUDINARY_API_KEY
+    and CLOUDINARY_API_SECRET
+):
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": CLOUDINARY_CLOUD_NAME,
+        "API_KEY": CLOUDINARY_API_KEY,
+        "API_SECRET": CLOUDINARY_API_SECRET,
+    }
+
+    DEFAULT_STORAGE = {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    }
+else:
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+    DEFAULT_STORAGE = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
 
 STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
+    "default": DEFAULT_STORAGE,
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
