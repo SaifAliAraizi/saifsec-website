@@ -214,21 +214,26 @@ REST_FRAMEWORK = {
 # EMAIL — BREVO SMTP
 # ============================================================
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+BREVO_SMTP_LOGIN = config("BREVO_SMTP_LOGIN", default="")
+BREVO_SMTP_KEY = config("BREVO_SMTP_KEY", default="")
+CONTACT_RECEIVER_EMAIL = config("CONTACT_RECEIVER_EMAIL", default="")
 
-EMAIL_HOST = "smtp-relay.brevo.com"
+if BREVO_SMTP_LOGIN and BREVO_SMTP_KEY:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp-relay.brevo.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = BREVO_SMTP_LOGIN
+    EMAIL_HOST_PASSWORD = BREVO_SMTP_KEY
 
-EMAIL_PORT = 587
-
-EMAIL_USE_TLS = True
-
-EMAIL_HOST_USER = config("BREVO_SMTP_LOGIN", default="")
-
-EMAIL_HOST_PASSWORD = config("BREVO_SMTP_KEY", default="")
+    # Important: prevents Render/Gunicorn from hanging forever
+    EMAIL_TIMEOUT = 10
+else:
+    # Safe fallback: message still saves in Django Admin,
+    # email prints in backend logs instead of sending.
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DEFAULT_FROM_EMAIL = "noreply@saifsec.com"
-
-CONTACT_RECEIVER_EMAIL = config("CONTACT_RECEIVER_EMAIL", default="")
 
 
 # ============================================================

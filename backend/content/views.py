@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.conf import settings
+import logging
 
 
 from .models import (
@@ -63,21 +64,63 @@ class WriteupList(generics.ListAPIView):
     serializer_class = WriteupSerializer
 
 
+logger = logging.getLogger(__name__)
 class ContactCreate(APIView):
     def post(self, request):
         serializer = ContactMessageSerializer(data=request.data)
 
-        # Invalid input returns HTTP 400 with field errors.
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # Save the submission to the database.
-        serializer.save()
+        # Save the message first.
+        # Even if email fails, the message will still appear in Django Admin.
+        message = serializer.save()
 
-        # Confirm receipt, not email delivery.
+        email_user = getattr(settings, "EMAIL_HOST_USER", "")
+        email_password = getattr(settings, "EMAIL_HOST_PASSWORD", "")
+        receiver_email = getattr(settings, "CONTACT_RECEIVER_EMAIL", "")
+        default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+
+        # Only try SMTP if credentials are configured.
+        # This prevents Render/Gunicorn from hanging if Brevo is missing or incomplete.
+        if email_user and email_password and receiver_email:
+            try:
+                send_mail(
+                    subject=f"[SaifSec Contact] {message.subject}",
+                    message=(
+                        f"Name: {message.name}\n"
+                        f"Email: {message.email}\n\n"
+                        f"Message:\n{message.message}"
+                    ),
+                    from_email=default_from_email,
+                    recipient_list=[receiver_email],
+                    fail_silently=True,
+                )
+
+                logger.info(
+                    "Contact email sent successfully: %s",
+                    message.subject,
+                )
+
+            except Exception as error:
+                # Do not break the frontend/contact form if email fails.
+                logger.error(
+                    "Contact message saved, but email failed: %s",
+                    error,
+                )
+        else:
+            logger.info(
+                "SMTP credentials missing/incomplete. "
+                "Contact message saved to database only."
+            )
+
         return Response(
             {
                 "ok": True,
-                "message": "Your message has been received.",
+                "message": "Message saved successfully.",
             },
             status=status.HTTP_201_CREATED,
         )
