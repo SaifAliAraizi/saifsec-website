@@ -325,39 +325,46 @@ function ChallengeTable({ items, showPath = false }) {
       <table className="challenge-table">
         <thead>
           <tr>
-            <th>Challenge</th>
-            {showPath && <th>Location</th>}
-            <th>Tags</th>
-            <th>Author</th>
-            <th>Write-up</th>
+            <th className="col-task">Challenge</th>
+            {showPath && <th className="col-path">Location</th>}
+            <th className="col-tags">Tags</th>
+            <th className="col-author">Author</th>
+            <th className="col-read">Write-up</th>
           </tr>
         </thead>
         <tbody>
           {sorted.map((w) => (
             <tr key={w.id}>
-              <td className="cell-task">
-                <FaFileCode className="file-icon" />
-                {w.task}
+              <td className="col-task">
+                <span className="task-inner">
+                  <FaFileCode className="file-icon" />
+                  <span className="task-name">{w.task}</span>
+                </span>
               </td>
 
               {showPath && (
-                <td className="cell-path">
-                  {w.event} <FaChevronRight className="path-sep" />{" "}
-                  {getCategory(w)}
+                <td className="col-path">
+                  <span className="path-inner">
+                    {w.event}
+                    <FaChevronRight className="path-sep" />
+                    {getCategory(w)}
+                  </span>
                 </td>
               )}
 
-              <td className="cell-tags">
-                {(w.tags || []).map((t) => (
-                  <span key={t} className="tag-chip">
-                    {t}
-                  </span>
-                ))}
+              <td className="col-tags">
+                <span className="tag-group">
+                  {(w.tags || []).map((t) => (
+                    <span key={t} className="tag-chip">
+                      {t}
+                    </span>
+                  ))}
+                </span>
               </td>
 
-              <td className="cell-author">{w.author}</td>
+              <td className="col-author">{w.author}</td>
 
-              <td>
+              <td className="col-read">
                 <a
                   href={w.github_url}
                   target="_blank"

@@ -273,6 +273,7 @@
 .challenge-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
   font-size: 13px;
 }
 
@@ -303,14 +304,26 @@
 }
 
 .challenge-table td {
+  display: table-cell;      /* critical: never override this */
   padding: 12px 14px;
   vertical-align: middle;
 }
 
-.cell-task {
-  display: flex;
+/* Column widths */
+.col-task { width: 34%; }
+.col-path { width: 20%; }
+.col-tags { width: 30%; }
+.col-author { width: 16%; }
+.col-read { width: 110px; }
+
+/* Challenge name — flex lives on the inner span, not the td */
+.task-inner {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
+}
+
+.task-name {
   color: #e6ecf4;
   font-weight: 500;
 }
@@ -321,8 +334,9 @@
   font-size: 14px;
 }
 
-.cell-path {
-  display: flex;
+/* Location (search results only) */
+.path-inner {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   color: #8a95a3;
@@ -336,12 +350,13 @@
   font-size: 8px;
 }
 
-.cell-author {
+.col-author {
   color: #8a95a3;
   white-space: nowrap;
 }
 
-.cell-tags {
+/* Tags — flex on inner span */
+.tag-group {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
@@ -382,6 +397,30 @@
 
 .read-icon {
   font-size: 9px;
+}
+
+/* ============ RESPONSIVE ============ */
+@media screen and (max-width: 700px) {
+  .ctf-section {
+    padding: 30px 4vw 50px;
+  }
+
+  .ctf-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ctf-search {
+    width: 100%;
+  }
+
+  .folder-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-table {
+    min-width: 600px;
+  }
 }
 
 /* ============ RESPONSIVE ============ */
