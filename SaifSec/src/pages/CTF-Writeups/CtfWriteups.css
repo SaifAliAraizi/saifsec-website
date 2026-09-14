@@ -389,6 +389,12 @@
   white-space: nowrap;
 }
 
+.tag-empty {
+  color: #3d4f66;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+}
+
 /* Read link */
 .read-link {
   display: inline-flex;

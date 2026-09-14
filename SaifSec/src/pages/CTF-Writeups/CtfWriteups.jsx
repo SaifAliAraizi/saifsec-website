@@ -42,6 +42,13 @@ function CategoryIcon({ name }) {
   return <Icon />;
 }
 
+/** Prefer explicit category; fall back to first tag if category is empty/Misc */
+function resolveCategory(w) {
+  if (w.category && w.category !== "Misc") return w.category;
+  if (Array.isArray(w.tags) && w.tags.length > 0) return w.tags[0];
+  return "Misc";
+}
+
 function CtfWriteups() {
   const { data, loading, error, refetch } = useApiData("/writeups/");
   const [params, setParams] = useSearchParams();
@@ -51,12 +58,12 @@ function CtfWriteups() {
   const activeEvent = params.get("event");
   const activeCategory = params.get("category");
 
-  // Build Event -> Category -> Challenges tree
+  // Event → Category → Challenges
   const tree = useMemo(() => {
     const events = {};
     for (const w of writeups) {
       const ev = w.event || "Other";
-      const cat = w.category || "Misc";
+      const cat = resolveCategory(w);
       if (!events[ev]) events[ev] = { name: ev, categories: {}, count: 0 };
       if (!events[ev].categories[cat]) {
         events[ev].categories[cat] = { name: cat, items: [] };
@@ -73,12 +80,12 @@ function CtfWriteups() {
       ? currentEvent.categories[activeCategory] || null
       : null;
 
-  // Global search flattens everything
+  // Global search
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return null;
     return writeups.filter((w) =>
-      [w.event, w.category, w.task, w.difficulty, ...(w.tags || [])]
+      [w.event, resolveCategory(w), w.task, ...(w.tags || [])]
         .join(" ")
         .toLowerCase()
         .includes(q)
@@ -118,7 +125,8 @@ function CtfWriteups() {
           <div>
             <h1 className="ctf-title">CTF Write-ups</h1>
             <p className="ctf-subtitle">
-              {tree.length} events · {writeups.length} challenges solved
+              {tree.length} event{tree.length !== 1 && "s"} · {writeups.length} challenge
+              {writeups.length !== 1 && "s"} solved
             </p>
           </div>
 
@@ -147,7 +155,11 @@ function CtfWriteups() {
         {/* Breadcrumb */}
         {!searchResults && (
           <nav className="ctf-breadcrumb" aria-label="Breadcrumb">
-            <button type="button" onClick={goRoot} className={!activeEvent ? "current" : ""}>
+            <button
+              type="button"
+              onClick={goRoot}
+              className={!activeEvent ? "current" : ""}
+            >
               Write-ups
             </button>
             {currentEvent && (
@@ -171,7 +183,7 @@ function CtfWriteups() {
           </nav>
         )}
 
-        {/* ---------- SEARCH RESULTS (flat) ---------- */}
+        {/* SEARCH RESULTS */}
         {searchResults && (
           <>
             <p className="ctf-results-count">
@@ -181,7 +193,7 @@ function CtfWriteups() {
           </>
         )}
 
-        {/* ---------- LEVEL 0: EVENT FOLDERS ---------- */}
+        {/* LEVEL 0: EVENT FOLDERS */}
         {!searchResults && !currentEvent && (
           <div className="folder-grid">
             {tree.map((ev) => (
@@ -196,8 +208,8 @@ function CtfWriteups() {
                   <h2>{ev.name}</h2>
                   <p>
                     {Object.keys(ev.categories).length} categor
-                    {Object.keys(ev.categories).length === 1 ? "y" : "ies"} · {ev.count} challenge
-                    {ev.count !== 1 && "s"}
+                    {Object.keys(ev.categories).length === 1 ? "y" : "ies"} · {ev.count}{" "}
+                    challenge{ev.count !== 1 && "s"}
                   </p>
                 </div>
                 <FaChevronRight className="folder-arrow" />
@@ -209,7 +221,7 @@ function CtfWriteups() {
           </div>
         )}
 
-        {/* ---------- LEVEL 1: CATEGORY FOLDERS ---------- */}
+        {/* LEVEL 1: CATEGORY FOLDERS (Cryptography, Forensics, ...) */}
         {!searchResults && currentEvent && !currentCategory && (
           <div className="folder-grid">
             {Object.values(currentEvent.categories)
@@ -236,7 +248,7 @@ function CtfWriteups() {
           </div>
         )}
 
-        {/* ---------- LEVEL 2: CHALLENGE FILES ---------- */}
+        {/* LEVEL 2: CHALLENGES INSIDE A CATEGORY */}
         {!searchResults && currentCategory && (
           <>
             <div className="category-heading">
@@ -249,7 +261,6 @@ function CtfWriteups() {
           </>
         )}
 
-        {/* Event requested in URL but not found */}
         {!searchResults && activeEvent && !currentEvent && (
           <div className="ctf-state">
             <p>Event "{activeEvent}" not found.</p>
@@ -273,49 +284,53 @@ function ChallengeTable({ items, showPath = false }) {
           <tr>
             <th>Challenge</th>
             {showPath && <th>Location</th>}
-            <th>Difficulty</th>
             <th>Tags</th>
             <th>Author</th>
             <th>Write-up</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((w) => (
-            <tr key={w.id}>
-              <td className="cell-task">
-                <FaFileCode className="file-icon" />
-                {w.task}
-              </td>
-              {showPath && (
-                <td className="cell-path">
-                  {w.event} <FaChevronRight className="path-sep" /> {w.category}
+          {items.map((w) => {
+            const cat = resolveCategory(w);
+            // Hide the category tag if it's already the folder we're inside
+            const extraTags = (w.tags || []).filter(
+              (t) => t.toLowerCase() !== cat.toLowerCase()
+            );
+
+            return (
+              <tr key={w.id}>
+                <td className="cell-task">
+                  <FaFileCode className="file-icon" />
+                  {w.task}
                 </td>
-              )}
-              <td>
-                {w.difficulty ? (
-                  <span className={`difficulty-badge ${w.difficulty}`}>{w.difficulty}</span>
-                ) : (
-                  <span className="difficulty-badge none">—</span>
+                {showPath && (
+                  <td className="cell-path">
+                    {w.event}
+                    <FaChevronRight className="path-sep" />
+                    {cat}
+                  </td>
                 )}
-              </td>
-              <td className="cell-tags">
-                {(w.tags || []).map((t) => (
-                  <span key={t} className="tag-chip">{t}</span>
-                ))}
-              </td>
-              <td className="cell-author">{w.author}</td>
-              <td>
-                <a
-                  href={w.github_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="read-link"
-                >
-                  Read <FaExternalLinkAlt className="read-icon" />
-                </a>
-              </td>
-            </tr>
-          ))}
+                <td className="cell-tags">
+                  {extraTags.length > 0
+                    ? extraTags.map((t) => (
+                        <span key={t} className="tag-chip">{t}</span>
+                      ))
+                    : <span className="tag-empty">—</span>}
+                </td>
+                <td className="cell-author">{w.author}</td>
+                <td>
+                  <a
+                    href={w.github_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="read-link"
+                  >
+                    Read <FaExternalLinkAlt className="read-icon" />
+                  </a>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
