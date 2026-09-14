@@ -17,11 +17,24 @@ import {
   FaEye,
   FaImage,
   FaNetworkWired,
-  FaUserShield,
   FaQuestion,
 } from "react-icons/fa";
 import "./CtfWriteups.css";
 import useApiData from "../../hooks/useApiData";
+
+// Folders are created from these tags automatically.
+// If a challenge's tags contain one of these names, it goes into that folder.
+const KNOWN_CATEGORIES = [
+  "Web Exploitation",
+  "Cryptography",
+  "Forensics",
+  "Binary Exploitation",
+  "Reverse Engineering",
+  "General Skills",
+  "OSINT",
+  "Steganography",
+  "Networking",
+];
 
 const CATEGORY_ICONS = {
   "Web Exploitation": FaGlobe,
@@ -33,20 +46,22 @@ const CATEGORY_ICONS = {
   OSINT: FaEye,
   Steganography: FaImage,
   Networking: FaNetworkWired,
-  "Privilege Escalation": FaUserShield,
   Misc: FaQuestion,
 };
+
+function getCategory(writeup) {
+  const tags = writeup.tags || [];
+  const match = KNOWN_CATEGORIES.find((category) =>
+    tags.some(
+      (tag) => String(tag).trim().toLowerCase() === category.toLowerCase()
+    )
+  );
+  return match || "Misc";
+}
 
 function CategoryIcon({ name }) {
   const Icon = CATEGORY_ICONS[name] || FaFolder;
   return <Icon />;
-}
-
-/** Prefer explicit category; fall back to first tag if category is empty/Misc */
-function resolveCategory(w) {
-  if (w.category && w.category !== "Misc") return w.category;
-  if (Array.isArray(w.tags) && w.tags.length > 0) return w.tags[0];
-  return "Misc";
 }
 
 function CtfWriteups() {
@@ -58,19 +73,28 @@ function CtfWriteups() {
   const activeEvent = params.get("event");
   const activeCategory = params.get("category");
 
-  // Event → Category → Challenges
+  // Build Event -> Category -> Challenges tree (categories derived from tags)
   const tree = useMemo(() => {
     const events = {};
+
     for (const w of writeups) {
-      const ev = w.event || "Other";
-      const cat = resolveCategory(w);
-      if (!events[ev]) events[ev] = { name: ev, categories: {}, count: 0 };
-      if (!events[ev].categories[cat]) {
-        events[ev].categories[cat] = { name: cat, items: [] };
+      const eventName = w.event || "Other";
+      const categoryName = getCategory(w);
+
+      if (!events[eventName]) {
+        events[eventName] = { name: eventName, categories: {}, count: 0 };
       }
-      events[ev].categories[cat].items.push(w);
-      events[ev].count += 1;
+      if (!events[eventName].categories[categoryName]) {
+        events[eventName].categories[categoryName] = {
+          name: categoryName,
+          items: [],
+        };
+      }
+
+      events[eventName].categories[categoryName].items.push(w);
+      events[eventName].count += 1;
     }
+
     return Object.values(events).sort((a, b) => a.name.localeCompare(b.name));
   }, [writeups]);
 
@@ -80,12 +104,13 @@ function CtfWriteups() {
       ? currentEvent.categories[activeCategory] || null
       : null;
 
-  // Global search
+  // Global search flattens the whole tree
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return null;
+
     return writeups.filter((w) =>
-      [w.event, resolveCategory(w), w.task, ...(w.tags || [])]
+      [w.event, getCategory(w), w.task, ...(w.tags || [])]
         .join(" ")
         .toLowerCase()
         .includes(q)
@@ -94,7 +119,8 @@ function CtfWriteups() {
 
   const goRoot = () => setParams({});
   const goEvent = (name) => setParams({ event: name });
-  const goCategory = (ev, cat) => setParams({ event: ev, category: cat });
+  const goCategory = (eventName, categoryName) =>
+    setParams({ event: eventName, category: categoryName });
 
   if (loading) {
     return (
@@ -111,7 +137,9 @@ function CtfWriteups() {
       <section className="ctf-section">
         <div className="ctf-container ctf-state">
           <p>Unable to load write-ups.</p>
-          <button type="button" onClick={refetch}>Try Again</button>
+          <button type="button" onClick={refetch}>
+            Try Again
+          </button>
         </div>
       </section>
     );
@@ -125,8 +153,8 @@ function CtfWriteups() {
           <div>
             <h1 className="ctf-title">CTF Write-ups</h1>
             <p className="ctf-subtitle">
-              {tree.length} event{tree.length !== 1 && "s"} · {writeups.length} challenge
-              {writeups.length !== 1 && "s"} solved
+              {tree.length} event{tree.length !== 1 && "s"} · {writeups.length}{" "}
+              challenges solved
             </p>
           </div>
 
@@ -162,6 +190,7 @@ function CtfWriteups() {
             >
               Write-ups
             </button>
+
             {currentEvent && (
               <>
                 <FaChevronRight className="crumb-sep" />
@@ -174,6 +203,7 @@ function CtfWriteups() {
                 </button>
               </>
             )}
+
             {currentCategory && (
               <>
                 <FaChevronRight className="crumb-sep" />
@@ -183,63 +213,71 @@ function CtfWriteups() {
           </nav>
         )}
 
-        {/* SEARCH RESULTS */}
+        {/* ---------- SEARCH RESULTS (flat list) ---------- */}
         {searchResults && (
           <>
             <p className="ctf-results-count">
-              {searchResults.length} result{searchResults.length !== 1 && "s"} for "{search}"
+              {searchResults.length} result{searchResults.length !== 1 && "s"}{" "}
+              for "{search}"
             </p>
             <ChallengeTable items={searchResults} showPath />
           </>
         )}
 
-        {/* LEVEL 0: EVENT FOLDERS */}
+        {/* ---------- LEVEL 0: EVENT FOLDERS ---------- */}
         {!searchResults && !currentEvent && (
           <div className="folder-grid">
-            {tree.map((ev) => (
+            {tree.map((eventNode) => (
               <button
                 type="button"
-                key={ev.name}
+                key={eventNode.name}
                 className="folder-card event-folder"
-                onClick={() => goEvent(ev.name)}
+                onClick={() => goEvent(eventNode.name)}
               >
                 <FaFolder className="folder-icon" />
                 <div className="folder-info">
-                  <h2>{ev.name}</h2>
+                  <h2>{eventNode.name}</h2>
                   <p>
-                    {Object.keys(ev.categories).length} categor
-                    {Object.keys(ev.categories).length === 1 ? "y" : "ies"} · {ev.count}{" "}
-                    challenge{ev.count !== 1 && "s"}
+                    {Object.keys(eventNode.categories).length} categor
+                    {Object.keys(eventNode.categories).length === 1
+                      ? "y"
+                      : "ies"}{" "}
+                    · {eventNode.count} challenge
+                    {eventNode.count !== 1 && "s"}
                   </p>
                 </div>
                 <FaChevronRight className="folder-arrow" />
               </button>
             ))}
+
             {tree.length === 0 && (
               <p className="ctf-state">No write-ups published yet.</p>
             )}
           </div>
         )}
 
-        {/* LEVEL 1: CATEGORY FOLDERS (Cryptography, Forensics, ...) */}
+        {/* ---------- LEVEL 1: CATEGORY FOLDERS ---------- */}
         {!searchResults && currentEvent && !currentCategory && (
           <div className="folder-grid">
             {Object.values(currentEvent.categories)
               .sort((a, b) => a.name.localeCompare(b.name))
-              .map((cat) => (
+              .map((categoryNode) => (
                 <button
                   type="button"
-                  key={cat.name}
+                  key={categoryNode.name}
                   className="folder-card category-folder"
-                  onClick={() => goCategory(currentEvent.name, cat.name)}
+                  onClick={() =>
+                    goCategory(currentEvent.name, categoryNode.name)
+                  }
                 >
                   <span className="folder-icon category-icon">
-                    <CategoryIcon name={cat.name} />
+                    <CategoryIcon name={categoryNode.name} />
                   </span>
                   <div className="folder-info">
-                    <h2>{cat.name}</h2>
+                    <h2>{categoryNode.name}</h2>
                     <p>
-                      {cat.items.length} challenge{cat.items.length !== 1 && "s"}
+                      {categoryNode.items.length} challenge
+                      {categoryNode.items.length !== 1 && "s"}
                     </p>
                   </div>
                   <FaChevronRight className="folder-arrow" />
@@ -248,7 +286,7 @@ function CtfWriteups() {
           </div>
         )}
 
-        {/* LEVEL 2: CHALLENGES INSIDE A CATEGORY */}
+        {/* ---------- LEVEL 2: CHALLENGE FILES ---------- */}
         {!searchResults && currentCategory && (
           <>
             <div className="category-heading">
@@ -261,10 +299,13 @@ function CtfWriteups() {
           </>
         )}
 
+        {/* Event in URL but not found */}
         {!searchResults && activeEvent && !currentEvent && (
           <div className="ctf-state">
             <p>Event "{activeEvent}" not found.</p>
-            <button type="button" onClick={goRoot}>Back to all events</button>
+            <button type="button" onClick={goRoot}>
+              Back to all events
+            </button>
           </div>
         )}
       </div>
@@ -276,6 +317,8 @@ function ChallengeTable({ items, showPath = false }) {
   if (items.length === 0) {
     return <p className="ctf-state">No challenges here yet.</p>;
   }
+
+  const sorted = [...items].sort((a, b) => a.task.localeCompare(b.task));
 
   return (
     <div className="challenge-table-wrapper">
@@ -290,47 +333,42 @@ function ChallengeTable({ items, showPath = false }) {
           </tr>
         </thead>
         <tbody>
-          {items.map((w) => {
-            const cat = resolveCategory(w);
-            // Hide the category tag if it's already the folder we're inside
-            const extraTags = (w.tags || []).filter(
-              (t) => t.toLowerCase() !== cat.toLowerCase()
-            );
+          {sorted.map((w) => (
+            <tr key={w.id}>
+              <td className="cell-task">
+                <FaFileCode className="file-icon" />
+                {w.task}
+              </td>
 
-            return (
-              <tr key={w.id}>
-                <td className="cell-task">
-                  <FaFileCode className="file-icon" />
-                  {w.task}
+              {showPath && (
+                <td className="cell-path">
+                  {w.event} <FaChevronRight className="path-sep" />{" "}
+                  {getCategory(w)}
                 </td>
-                {showPath && (
-                  <td className="cell-path">
-                    {w.event}
-                    <FaChevronRight className="path-sep" />
-                    {cat}
-                  </td>
-                )}
-                <td className="cell-tags">
-                  {extraTags.length > 0
-                    ? extraTags.map((t) => (
-                        <span key={t} className="tag-chip">{t}</span>
-                      ))
-                    : <span className="tag-empty">—</span>}
-                </td>
-                <td className="cell-author">{w.author}</td>
-                <td>
-                  <a
-                    href={w.github_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="read-link"
-                  >
-                    Read <FaExternalLinkAlt className="read-icon" />
-                  </a>
-                </td>
-              </tr>
-            );
-          })}
+              )}
+
+              <td className="cell-tags">
+                {(w.tags || []).map((t) => (
+                  <span key={t} className="tag-chip">
+                    {t}
+                  </span>
+                ))}
+              </td>
+
+              <td className="cell-author">{w.author}</td>
+
+              <td>
+                <a
+                  href={w.github_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="read-link"
+                >
+                  Read <FaExternalLinkAlt className="read-icon" />
+                </a>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

@@ -167,7 +167,7 @@
   align-items: center;
   gap: 16px;
   width: 100%;
-  padding: 18px 18px;
+  padding: 18px;
   border: 1px solid #1f2a38;
   border-radius: 8px;
   background: #121824;
@@ -190,7 +190,7 @@
   display: grid;
   place-items: center;
   font-size: 30px;
-  color: #f2c14e; /* classic folder yellow */
+  color: #f2c14e;
   transition: transform 0.2s ease;
 }
 
@@ -341,37 +341,6 @@
   white-space: nowrap;
 }
 
-/* Difficulty */
-.difficulty-badge {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 3px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.difficulty-badge.easy {
-  background: rgba(126, 242, 157, 0.12);
-  color: #7ef29d;
-}
-
-.difficulty-badge.medium {
-  background: rgba(255, 209, 102, 0.12);
-  color: #ffd166;
-}
-
-.difficulty-badge.hard {
-  background: rgba(255, 123, 123, 0.12);
-  color: #ff7b7b;
-}
-
-.difficulty-badge.none {
-  color: #3d4f66;
-}
-
-/* Tags */
 .cell-tags {
   display: flex;
   flex-wrap: wrap;
@@ -389,13 +358,6 @@
   white-space: nowrap;
 }
 
-.tag-empty {
-  color: #3d4f66;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-}
-
-/* Read link */
 .read-link {
   display: inline-flex;
   align-items: center;
@@ -442,6 +404,6 @@
   }
 
   .challenge-table {
-    min-width: 640px;
+    min-width: 560px;
   }
 }
