@@ -70,57 +70,33 @@ class ContactCreate(APIView):
         serializer = ContactMessageSerializer(data=request.data)
 
         if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save the message first.
-        # Even if email fails, the message will still appear in Django Admin.
         message = serializer.save()
 
         email_user = getattr(settings, "EMAIL_HOST_USER", "")
         email_password = getattr(settings, "EMAIL_HOST_PASSWORD", "")
-        receiver_email = getattr(settings, "CONTACT_RECEIVER_EMAIL", "")
-        default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+        receiver = getattr(settings, "CONTACT_RECEIVER_EMAIL", "")
 
-        # Only try SMTP if credentials are configured.
-        # This prevents Render/Gunicorn from hanging if Brevo is missing or incomplete.
-        if email_user and email_password and receiver_email:
+        if email_user and email_password and receiver:
             try:
                 send_mail(
                     subject=f"[SaifSec Contact] {message.subject}",
                     message=(
-                        f"Name: {message.name}\n"
-                        f"Email: {message.email}\n\n"
+                        f"From: {message.name} <{message.email}>\n\n"
                         f"Message:\n{message.message}"
                     ),
-                    from_email=default_from_email,
-                    recipient_list=[receiver_email],
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@saifsec.com"),
+                    recipient_list=[receiver],
                     fail_silently=True,
                 )
-
-                logger.info(
-                    "Contact email sent successfully: %s",
-                    message.subject,
-                )
-
-            except Exception as error:
-                # Do not break the frontend/contact form if email fails.
-                logger.error(
-                    "Contact message saved, but email failed: %s",
-                    error,
-                )
+                logger.info(f"Email sent for: {message.subject}")
+            except Exception as e:
+                logger.error(f"Email failed: {e}")
         else:
-            logger.info(
-                "SMTP credentials missing/incomplete. "
-                "Contact message saved to database only."
-            )
+            logger.info("No SMTP credentials - message saved to DB only")
 
         return Response(
-            {
-                "ok": True,
-                "message": "Message saved successfully.",
-            },
-            status=status.HTTP_201_CREATED,
+            {"ok": True, "message": "Message saved successfully."},
+            status=status.HTTP_201_CREATED
         )

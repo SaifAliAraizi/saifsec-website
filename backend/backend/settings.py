@@ -210,13 +210,10 @@ REST_FRAMEWORK = {
 }
 
 
-# ============================================================
-# EMAIL — BREVO SMTP
-# ============================================================
-
+# Email Settings - Safe handling of SMTP credentials
 BREVO_SMTP_LOGIN = config("BREVO_SMTP_LOGIN", default="")
 BREVO_SMTP_KEY = config("BREVO_SMTP_KEY", default="")
-CONTACT_RECEIVER_EMAIL = config("CONTACT_RECEIVER_EMAIL", default="")
+CONTACT_RECEIVER_EMAIL = config("CONTACT_RECEIVER_EMAIL", default="araizii007@gmail.com")
 
 if BREVO_SMTP_LOGIN and BREVO_SMTP_KEY:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -225,12 +222,9 @@ if BREVO_SMTP_LOGIN and BREVO_SMTP_KEY:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = BREVO_SMTP_LOGIN
     EMAIL_HOST_PASSWORD = BREVO_SMTP_KEY
-
-    # Important: prevents Render/Gunicorn from hanging forever
     EMAIL_TIMEOUT = 10
 else:
-    # Safe fallback: message still saves in Django Admin,
-    # email prints in backend logs instead of sending.
+    # No SMTP credentials -> save to database, print to logs instead
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DEFAULT_FROM_EMAIL = "noreply@saifsec.com"

@@ -53,7 +53,6 @@ function Contact() {
       });
 
       setStatus("success");
-
       setForm({
         name: "",
         email: "",
@@ -61,7 +60,7 @@ function Contact() {
         message: "",
       });
     } catch (error) {
-      console.error(error);
+      console.error("Contact form error:", error);
       setStatus("error");
     }
   };
@@ -124,7 +123,7 @@ function Contact() {
 
             {status === "success" && (
               <p className="contact-feedback success">
-                Message sent successfully.
+                Your message has been received successfully. Thank you for getting in touch!
               </p>
             )}
 
