@@ -119,10 +119,11 @@ class ServiceAdmin(admin.ModelAdmin):
 # ---------- Writeups ----------
 @admin.register(Writeup)
 class WriteupAdmin(admin.ModelAdmin):
-    list_display = ("event", "task", "author", "order")
-    list_editable = ("order",)
-    list_filter = ("event",)
+    list_display = ("task", "event", "category", "difficulty", "author", "order")
+    list_editable = ("category", "difficulty", "order")
+    list_filter = ("event", "category", "difficulty")
     search_fields = ("task", "event", "tags")
+    ordering = ("event", "category", "order")
 
 
 # ---------- Contact Messages ----------

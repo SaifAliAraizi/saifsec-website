@@ -131,7 +131,7 @@ class LabDetailSerializer(serializers.ModelSerializer):
 class WriteupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Writeup
-        fields = ["id", "event", "task", "tags", "author", "github_url"]
+        fields = ["id", "event", "category", "task", "difficulty", "tags", "author", "github_url"]
 
 
 # ---------- Contact ----------

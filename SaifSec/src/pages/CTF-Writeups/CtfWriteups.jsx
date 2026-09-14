@@ -1,55 +1,325 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  FaFolder,
+  FaFolderOpen,
+  FaFileCode,
+  FaExternalLinkAlt,
+  FaChevronRight,
+  FaSearch,
+  FaTimes,
+  FaLock,
+  FaBug,
+  FaSearchPlus,
+  FaGlobe,
+  FaMicrochip,
+  FaCogs,
+  FaEye,
+  FaImage,
+  FaNetworkWired,
+  FaUserShield,
+  FaQuestion,
+} from "react-icons/fa";
 import "./CtfWriteups.css";
 import useApiData from "../../hooks/useApiData";
 
+const CATEGORY_ICONS = {
+  "Web Exploitation": FaGlobe,
+  Cryptography: FaLock,
+  Forensics: FaSearchPlus,
+  "Binary Exploitation": FaMicrochip,
+  "Reverse Engineering": FaCogs,
+  "General Skills": FaBug,
+  OSINT: FaEye,
+  Steganography: FaImage,
+  Networking: FaNetworkWired,
+  "Privilege Escalation": FaUserShield,
+  Misc: FaQuestion,
+};
+
+function CategoryIcon({ name }) {
+  const Icon = CATEGORY_ICONS[name] || FaFolder;
+  return <Icon />;
+}
+
 function CtfWriteups() {
   const { data, loading, error, refetch } = useApiData("/writeups/");
+  const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState("");
 
   const writeups = Array.isArray(data) ? data : [];
-  const filtered = writeups.filter((w) => {
-    const q = search.toLowerCase();
-    return (w.event + " " + w.task + " " + (w.tags || []).join(" ")).toLowerCase().includes(q);
-  });
+  const activeEvent = params.get("event");
+  const activeCategory = params.get("category");
 
-  if (loading) return <section id="ctf-write-ups" className="ctf-section"><div className="ctf-container">Loading...</div></section>;
-  if (error) return <section id="ctf-write-ups" className="ctf-section"><div className="ctf-container">Error <button onClick={refetch}>Retry</button></div></section>;
+  // Build Event -> Category -> Challenges tree
+  const tree = useMemo(() => {
+    const events = {};
+    for (const w of writeups) {
+      const ev = w.event || "Other";
+      const cat = w.category || "Misc";
+      if (!events[ev]) events[ev] = { name: ev, categories: {}, count: 0 };
+      if (!events[ev].categories[cat]) {
+        events[ev].categories[cat] = { name: cat, items: [] };
+      }
+      events[ev].categories[cat].items.push(w);
+      events[ev].count += 1;
+    }
+    return Object.values(events).sort((a, b) => a.name.localeCompare(b.name));
+  }, [writeups]);
+
+  const currentEvent = tree.find((e) => e.name === activeEvent) || null;
+  const currentCategory =
+    currentEvent && activeCategory
+      ? currentEvent.categories[activeCategory] || null
+      : null;
+
+  // Global search flattens everything
+  const searchResults = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return null;
+    return writeups.filter((w) =>
+      [w.event, w.category, w.task, w.difficulty, ...(w.tags || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [search, writeups]);
+
+  const goRoot = () => setParams({});
+  const goEvent = (name) => setParams({ event: name });
+  const goCategory = (ev, cat) => setParams({ event: ev, category: cat });
+
+  if (loading) {
+    return (
+      <section className="ctf-section">
+        <div className="ctf-container">
+          <p className="ctf-state">Loading write-ups...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="ctf-section">
+        <div className="ctf-container ctf-state">
+          <p>Unable to load write-ups.</p>
+          <button type="button" onClick={refetch}>Try Again</button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="ctf-section" id="ctf-write-ups">
       <div className="ctf-container">
-        <h1 className="ctf-heading">Writeups</h1>
-        <div className="ctf-filter-bar">
-          <label htmlFor="tag-filter" className="filter-label">Enter Tags</label>
-          <input id="tag-filter" type="text" className="filter-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="network, crypto, pwn..." />
-          <button type="button" className="filter-btn" onClick={() => {}}>Filter</button>
-        </div>
+        {/* Header */}
+        <header className="ctf-header">
+          <div>
+            <h1 className="ctf-title">CTF Write-ups</h1>
+            <p className="ctf-subtitle">
+              {tree.length} events · {writeups.length} challenges solved
+            </p>
+          </div>
 
-        <div className="ctf-table-wrapper">
-          <table className="ctf-table">
-            <thead>
-              <tr><th>Event</th><th>Task</th><th>Tags</th><th>Author Name</th><th>Archive</th></tr>
-            </thead>
-            <tbody>
-              {filtered.map((w) => (
-                <tr key={w.id}>
-                  <td className="cell-event">{w.event}</td>
-                  <td className="cell-task">{w.task}</td>
-                  <td className="cell-tags">
-                    {(w.tags || []).map(t => <span key={t} className="tag-badge">{t}</span>)}
-                  </td>
-                  <td className="cell-author">{w.author}</td>
-                  <td className="cell-archive">
-                    <a href={w.github_url} target="_blank" rel="noreferrer" className="archive-link">Read</a>
-                  </td>
-                </tr>
+          <div className="ctf-search">
+            <FaSearch className="ctf-search-icon" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search challenges, categories, tags..."
+              aria-label="Search write-ups"
+            />
+            {search && (
+              <button
+                type="button"
+                className="ctf-search-clear"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                <FaTimes />
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Breadcrumb */}
+        {!searchResults && (
+          <nav className="ctf-breadcrumb" aria-label="Breadcrumb">
+            <button type="button" onClick={goRoot} className={!activeEvent ? "current" : ""}>
+              Write-ups
+            </button>
+            {currentEvent && (
+              <>
+                <FaChevronRight className="crumb-sep" />
+                <button
+                  type="button"
+                  onClick={() => goEvent(currentEvent.name)}
+                  className={!activeCategory ? "current" : ""}
+                >
+                  {currentEvent.name}
+                </button>
+              </>
+            )}
+            {currentCategory && (
+              <>
+                <FaChevronRight className="crumb-sep" />
+                <span className="current">{currentCategory.name}</span>
+              </>
+            )}
+          </nav>
+        )}
+
+        {/* ---------- SEARCH RESULTS (flat) ---------- */}
+        {searchResults && (
+          <>
+            <p className="ctf-results-count">
+              {searchResults.length} result{searchResults.length !== 1 && "s"} for "{search}"
+            </p>
+            <ChallengeTable items={searchResults} showPath />
+          </>
+        )}
+
+        {/* ---------- LEVEL 0: EVENT FOLDERS ---------- */}
+        {!searchResults && !currentEvent && (
+          <div className="folder-grid">
+            {tree.map((ev) => (
+              <button
+                type="button"
+                key={ev.name}
+                className="folder-card event-folder"
+                onClick={() => goEvent(ev.name)}
+              >
+                <FaFolder className="folder-icon" />
+                <div className="folder-info">
+                  <h2>{ev.name}</h2>
+                  <p>
+                    {Object.keys(ev.categories).length} categor
+                    {Object.keys(ev.categories).length === 1 ? "y" : "ies"} · {ev.count} challenge
+                    {ev.count !== 1 && "s"}
+                  </p>
+                </div>
+                <FaChevronRight className="folder-arrow" />
+              </button>
+            ))}
+            {tree.length === 0 && (
+              <p className="ctf-state">No write-ups published yet.</p>
+            )}
+          </div>
+        )}
+
+        {/* ---------- LEVEL 1: CATEGORY FOLDERS ---------- */}
+        {!searchResults && currentEvent && !currentCategory && (
+          <div className="folder-grid">
+            {Object.values(currentEvent.categories)
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((cat) => (
+                <button
+                  type="button"
+                  key={cat.name}
+                  className="folder-card category-folder"
+                  onClick={() => goCategory(currentEvent.name, cat.name)}
+                >
+                  <span className="folder-icon category-icon">
+                    <CategoryIcon name={cat.name} />
+                  </span>
+                  <div className="folder-info">
+                    <h2>{cat.name}</h2>
+                    <p>
+                      {cat.items.length} challenge{cat.items.length !== 1 && "s"}
+                    </p>
+                  </div>
+                  <FaChevronRight className="folder-arrow" />
+                </button>
               ))}
-            </tbody>
-          </table>
-          {filtered.length === 0 && <p className="ctf-empty">No writeups match those tags.</p>}
-        </div>
+          </div>
+        )}
+
+        {/* ---------- LEVEL 2: CHALLENGE FILES ---------- */}
+        {!searchResults && currentCategory && (
+          <>
+            <div className="category-heading">
+              <FaFolderOpen className="category-heading-icon" />
+              <h2>
+                {currentEvent.name} / {currentCategory.name}
+              </h2>
+            </div>
+            <ChallengeTable items={currentCategory.items} />
+          </>
+        )}
+
+        {/* Event requested in URL but not found */}
+        {!searchResults && activeEvent && !currentEvent && (
+          <div className="ctf-state">
+            <p>Event "{activeEvent}" not found.</p>
+            <button type="button" onClick={goRoot}>Back to all events</button>
+          </div>
+        )}
       </div>
     </section>
   );
 }
+
+function ChallengeTable({ items, showPath = false }) {
+  if (items.length === 0) {
+    return <p className="ctf-state">No challenges here yet.</p>;
+  }
+
+  return (
+    <div className="challenge-table-wrapper">
+      <table className="challenge-table">
+        <thead>
+          <tr>
+            <th>Challenge</th>
+            {showPath && <th>Location</th>}
+            <th>Difficulty</th>
+            <th>Tags</th>
+            <th>Author</th>
+            <th>Write-up</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((w) => (
+            <tr key={w.id}>
+              <td className="cell-task">
+                <FaFileCode className="file-icon" />
+                {w.task}
+              </td>
+              {showPath && (
+                <td className="cell-path">
+                  {w.event} <FaChevronRight className="path-sep" /> {w.category}
+                </td>
+              )}
+              <td>
+                {w.difficulty ? (
+                  <span className={`difficulty-badge ${w.difficulty}`}>{w.difficulty}</span>
+                ) : (
+                  <span className="difficulty-badge none">—</span>
+                )}
+              </td>
+              <td className="cell-tags">
+                {(w.tags || []).map((t) => (
+                  <span key={t} className="tag-chip">{t}</span>
+                ))}
+              </td>
+              <td className="cell-author">{w.author}</td>
+              <td>
+                <a
+                  href={w.github_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="read-link"
+                >
+                  Read <FaExternalLinkAlt className="read-icon" />
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default CtfWriteups;

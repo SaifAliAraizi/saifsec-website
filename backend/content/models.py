@@ -257,19 +257,41 @@ class LabSection(models.Model):
 # CTF WRITE-UPS
 # =========================================================
 class Writeup(TimeStampedModel):
-    event = models.CharField(max_length=120)
+    CATEGORY_CHOICES = [
+        ("Web Exploitation", "Web Exploitation"),
+        ("Cryptography", "Cryptography"),
+        ("Forensics", "Forensics"),
+        ("Binary Exploitation", "Binary Exploitation"),
+        ("Reverse Engineering", "Reverse Engineering"),
+        ("General Skills", "General Skills"),
+        ("OSINT", "OSINT"),
+        ("Steganography", "Steganography"),
+        ("Networking", "Networking"),
+        ("Privilege Escalation", "Privilege Escalation"),
+        ("Misc", "Misc"),
+    ]
+
+    DIFFICULTY_CHOICES = [
+        ("easy", "Easy"),
+        ("medium", "Medium"),
+        ("hard", "Hard"),
+    ]
+
+    event = models.CharField(max_length=120, help_text="e.g. PicoCTF, HackTheBox, TryHackMe")
+    category = models.CharField(max_length=60, choices=CATEGORY_CHOICES, default="Misc")
     task = models.CharField(max_length=200)
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, blank=True)
     tags = models.JSONField(default=list, blank=True,
-                            help_text='JSON list of tag strings, e.g. ["crypto", "pwn"]')
+                            help_text='JSON list of tag strings, e.g. ["rsa", "python"]')
     author = models.CharField(max_length=120)
     github_url = models.URLField()
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["order"]
+        ordering = ["event", "category", "order", "task"]
 
     def __str__(self):
-        return f"{self.event} / {self.task}"
+        return f"{self.event} / {self.category} / {self.task}"
 
 
 # =========================================================
@@ -281,6 +303,8 @@ class ContactMessage(TimeStampedModel):
     subject = models.CharField(max_length=200)
     message = models.TextField()
     read = models.BooleanField(default=False)
+    
+    
 
     class Meta:
         ordering = ["-created"]
