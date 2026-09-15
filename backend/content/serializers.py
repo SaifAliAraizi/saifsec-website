@@ -116,7 +116,7 @@ class LabSectionSerializer(serializers.ModelSerializer):
 class LabListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lab
-        fields = ["id", "slug", "title", "subtitle"]
+        fields = ["id", "slug", "title", "subtitle", "group"]
 
 
 class LabDetailSerializer(serializers.ModelSerializer):

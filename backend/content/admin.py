@@ -119,11 +119,11 @@ class ServiceAdmin(admin.ModelAdmin):
 # ---------- Writeups ----------
 @admin.register(Writeup)
 class WriteupAdmin(admin.ModelAdmin):
-    list_display = ("task", "event", "category", "difficulty", "author", "order")
-    list_editable = ("category", "difficulty", "order")
-    list_filter = ("event", "category", "difficulty")
+    list_display = ("task", "event", "author", "order")
+    list_editable = ("order",)
+    list_filter = ("event",)
     search_fields = ("task", "event", "tags")
-    ordering = ("event", "category", "order")
+    ordering = ("event", "order", "task")
 
 
 # ---------- Contact Messages ----------
@@ -142,11 +142,13 @@ class ContactMessageAdmin(admin.ModelAdmin):
 class LabSectionInline(admin.StackedInline):
     model = LabSection
     extra = 1
-
-
+    
 @admin.register(Lab)
 class LabAdmin(admin.ModelAdmin):
-    list_display = ("title", "slug", "order")
-    list_editable = ("order",)
+    list_display = ("title", "group", "slug", "order")
+    list_editable = ("group", "order")
+    list_filter = ("group",)
+    search_fields = ("title", "group", "slug")
     prepopulated_fields = {"slug": ("title",)}
+    ordering = ("group", "order")
     inlines = [LabSectionInline]

@@ -228,7 +228,15 @@ class Service(TimeStampedModel):
 # LABS
 # =========================================================
 class Lab(TimeStampedModel):
-    slug = models.SlugField(unique=True, help_text="URL identifier, e.g. sql-injections")
+    group = models.CharField(
+        max_length=200,
+        default="OWASP Juice Shop",
+        help_text="Project name that groups related labs, e.g. OWASP Juice Shop",
+    )
+    slug = models.SlugField(
+        unique=True,
+        help_text="URL identifier, e.g. injection",
+    )
     title = models.CharField(max_length=200)
     subtitle = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -237,7 +245,7 @@ class Lab(TimeStampedModel):
         ordering = ["order"]
 
     def __str__(self):
-        return self.title
+        return f"{self.group} / {self.title}"
 
 
 class LabSection(models.Model):
