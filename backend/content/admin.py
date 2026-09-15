@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import (
     SiteConfig,
     Experience,
@@ -17,36 +18,67 @@ from .models import (
 )
 
 
-# ---------- Site Config ----------
+# =========================================================
+# SITE CONFIG
+# =========================================================
+
 @admin.register(SiteConfig)
 class SiteConfigAdmin(admin.ModelAdmin):
     list_display = ("brand_name", "hero_name", "email", "updated")
+
     fieldsets = (
-        ("Brand", {
-            "fields": ("logo", "brand_name", "tagline"),
-        }),
-        ("Hero", {
-            "fields": ("hero_name", "hero_title", "hero_description", "profile_image"),
-        }),
-        ("Contact", {
-            "fields": (
-                "email",
-                "phone",
-                "contact_image",
-                "contact_image_alt",
-            ),
-        }),
-        ("Socials", {
-            "fields": ("youtube_url", "linkedin_url", "github_url"),
-        }),
+        (
+            "Brand",
+            {
+                "fields": (
+                    "logo",
+                    "brand_name",
+                    "tagline",
+                ),
+            },
+        ),
+        (
+            "Hero",
+            {
+                "fields": (
+                    "hero_name",
+                    "hero_title",
+                    "hero_description",
+                    "profile_image",
+                ),
+            },
+        ),
+        (
+            "Contact",
+            {
+                "fields": (
+                    "email",
+                    "phone",
+                    "contact_image",
+                    "contact_image_alt",
+                ),
+            },
+        ),
+        (
+            "Socials",
+            {
+                "fields": (
+                    "youtube_url",
+                    "linkedin_url",
+                    "github_url",
+                ),
+            },
+        ),
     )
 
 
-# ---------- Experience ----------
+# =========================================================
+# EXPERIENCE
+# =========================================================
+
 class ExperiencePointInline(admin.TabularInline):
     model = ExperiencePoint
-    extra = 2
-    classes = ("collapse",)
+    extra = 1
 
 
 @admin.register(Experience)
@@ -56,20 +88,31 @@ class ExperienceAdmin(admin.ModelAdmin):
     inlines = [ExperiencePointInline]
 
 
-# ---------- Certifications ----------
+# =========================================================
+# CERTIFICATIONS
+# =========================================================
+
 @admin.register(Certification)
 class CertificationAdmin(admin.ModelAdmin):
-    list_display = ("title", "issuer", "issued_date", "expiry_date", "order")
+    list_display = (
+        "title",
+        "issuer",
+        "issued_date",
+        "expiry_date",
+        "order",
+    )
     list_editable = ("order",)
     list_filter = ("issuer",)
     search_fields = ("title", "credential_id")
 
 
-# ---------- Courses ----------
+# =========================================================
+# COURSES
+# =========================================================
+
 class CourseTextInline(admin.TabularInline):
     model = CourseText
     extra = 1
-    classes = ("collapse",)
 
 
 @admin.register(Course)
@@ -78,34 +121,53 @@ class CourseAdmin(admin.ModelAdmin):
     list_editable = ("order",)
     prepopulated_fields = {"slug": ("title",)}
     inlines = [CourseTextInline]
+
     fieldsets = (
-        ("Card", {
-            "fields": ("title", "slug", "subtitle", "description", "image", "order"),
-        }),
-        ("Detail Page", {
-            "fields": ("badge_image",),
-        }),
+        (
+            "Course Card",
+            {
+                "fields": (
+                    "title",
+                    "slug",
+                    "subtitle",
+                    "description",
+                    "image",
+                    "order",
+                ),
+            },
+        ),
+        (
+            "Course Detail Page",
+            {
+                "fields": (
+                    "badge_image",
+                ),
+            },
+        ),
     )
 
-# ---------- Courses: Modules and Lessons ----------
+
+# Course -> Module -> Lesson -> Lesson Section
 
 class LessonSectionInline(admin.StackedInline):
     model = LessonSection
     extra = 1
+    fields = (
+        "heading",
+        "body",
+        "bullets",
+        "image",
+        "order",
+    )
 
 
-class LessonInline(admin.StackedInline):
+class LessonInline(admin.TabularInline):
     model = Lesson
     extra = 1
-
-
-@admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin):
-    list_display = ("title", "module", "order")
-    list_editable = ("order",)
-    list_filter = ("module__course",)
-    search_fields = ("title",)
-    inlines = [LessonSectionInline]
+    fields = (
+        "title",
+        "order",
+    )
 
 
 @admin.register(Module)
@@ -113,17 +175,37 @@ class ModuleAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "order")
     list_editable = ("order",)
     list_filter = ("course",)
+    search_fields = ("title", "course__title")
+
+    # Module correctly contains Lessons
     inlines = [LessonInline]
 
 
-# ---------- Services ----------
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "module", "order")
+    list_editable = ("order",)
+    list_filter = ("module__course", "module")
+    search_fields = ("title", "module__title")
+
+    # Lesson correctly contains Lesson Sections
+    inlines = [LessonSectionInline]
+
+
+# =========================================================
+# SERVICES
+# =========================================================
+
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ("title", "icon", "order")
     list_editable = ("icon", "order")
 
 
-# ---------- Writeups ----------
+# =========================================================
+# CTF WRITE-UPS
+# =========================================================
+
 @admin.register(Writeup)
 class WriteupAdmin(admin.ModelAdmin):
     list_display = ("task", "event", "author", "order")
@@ -133,23 +215,15 @@ class WriteupAdmin(admin.ModelAdmin):
     ordering = ("event", "order", "task")
 
 
-# ---------- Contact Messages ----------
-@admin.register(ContactMessage)
-class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ("name", "email", "subject", "read", "created")
-    list_filter = ("read",)
-    search_fields = ("name", "email", "subject")
-    actions = ["mark_as_read"]
-
-    @admin.action(description="Mark selected as read")
-    def mark_as_read(self, request, queryset):
-        queryset.update(read=True)
-
+# =========================================================
+# LABS
+# =========================================================
 
 class LabSectionInline(admin.StackedInline):
     model = LabSection
     extra = 1
-    
+
+
 @admin.register(Lab)
 class LabAdmin(admin.ModelAdmin):
     list_display = ("title", "group", "slug", "order")
@@ -159,3 +233,19 @@ class LabAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     ordering = ("group", "order")
     inlines = [LabSectionInline]
+
+
+# =========================================================
+# CONTACT MESSAGES
+# =========================================================
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("name", "email", "subject", "read", "created")
+    list_filter = ("read",)
+    search_fields = ("name", "email", "subject")
+    actions = ("mark_as_read",)
+
+    @admin.action(description="Mark selected messages as read")
+    def mark_as_read(self, request, queryset):
+        queryset.update(read=True)
