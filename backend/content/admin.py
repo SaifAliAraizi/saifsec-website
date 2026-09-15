@@ -8,6 +8,7 @@ from .models import (
     CourseText,
     Module,
     Lesson,
+    LessonSection,
     Service,
     Writeup,
     ContactMessage,
@@ -86,19 +87,16 @@ class CourseAdmin(admin.ModelAdmin):
         }),
     )
 
+# ---------- Courses: Modules and Lessons ----------
 
-class LessonInline(admin.TabularInline):
+class LessonSectionInline(admin.StackedInline):
+    model = LessonSection
+    extra = 1
+
+
+class LessonInline(admin.StackedInline):
     model = Lesson
     extra = 1
-    classes = ("collapse",)
-
-
-@admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
-    list_display = ("title", "course", "order")
-    list_editable = ("order",)
-    list_filter = ("course",)
-    inlines = [LessonInline]
 
 
 @admin.register(Lesson)
@@ -107,6 +105,15 @@ class LessonAdmin(admin.ModelAdmin):
     list_editable = ("order",)
     list_filter = ("module__course",)
     search_fields = ("title",)
+    inlines = [LessonSectionInline]
+
+
+@admin.register(Module)
+class ModuleAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "order")
+    list_editable = ("order",)
+    list_filter = ("course",)
+    inlines = [LessonInline]
 
 
 # ---------- Services ----------

@@ -1,11 +1,26 @@
 from rest_framework import serializers
+
 from .models import (
-    SiteConfig, Experience, ExperiencePoint, Certification,
-    Course, CourseText, Module, Lesson, Service, Writeup, ContactMessage, Lab, LabSection
+    SiteConfig,
+    Experience,
+    Certification,
+    Course,
+    CourseText,
+    Module,
+    Lesson,
+    LessonSection,
+    Service,
+    Writeup,
+    ContactMessage,
+    Lab,
+    LabSection,
 )
 
 
-# ---------- Site Config ----------
+# =========================================================
+# SITE CONFIG
+# =========================================================
+
 class SiteConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteConfig
@@ -27,115 +42,260 @@ class SiteConfigSerializer(serializers.ModelSerializer):
         ]
 
 
-# ---------- Experience ----------
+# =========================================================
+# EXPERIENCE
+# =========================================================
+
 class ExperienceSerializer(serializers.ModelSerializer):
     responsibilities = serializers.SerializerMethodField()
 
     class Meta:
         model = Experience
-        fields = ["id", "title", "company", "location", "period", "responsibilities"]
+        fields = [
+            "id",
+            "title",
+            "company",
+            "location",
+            "period",
+            "responsibilities",
+        ]
 
     def get_responsibilities(self, obj):
-        return [p.text for p in obj.points.all()]
+        return [point.text for point in obj.points.all()]
 
 
-# ---------- Certifications ----------
+# =========================================================
+# CERTIFICATIONS
+# =========================================================
+
 class CertificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Certification
         fields = [
-            "id", "title", "issuer", "issued_date", "expiry_date",
-            "credential_id", "description", "image", "verify_url",
+            "id",
+            "title",
+            "issuer",
+            "issued_date",
+            "expiry_date",
+            "credential_id",
+            "description",
+            "image",
+            "verify_url",
         ]
 
 
-# ---------- Courses ----------
+# =========================================================
+# COURSES
+# =========================================================
+
+class LessonSectionSerializer(serializers.ModelSerializer):
+    paragraphs = serializers.SerializerMethodField()
+    bullets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LessonSection
+        fields = [
+            "id",
+            "heading",
+            "paragraphs",
+            "bullets",
+            "image",
+            "order",
+        ]
+
+    def get_paragraphs(self, obj):
+        if not obj.body:
+            return []
+
+        return [
+            paragraph.strip()
+            for paragraph in obj.body.split("\n\n")
+            if paragraph.strip()
+        ]
+
+    def get_bullets(self, obj):
+        if not obj.bullets:
+            return []
+
+        return [
+            bullet.strip()
+            for bullet in obj.bullets.splitlines()
+            if bullet.strip()
+        ]
+
+
 class LessonSerializer(serializers.ModelSerializer):
+    sections = LessonSectionSerializer(
+        many=True,
+        read_only=True,
+    )
+
     class Meta:
         model = Lesson
-        fields = ["id", "title", "sections"]
+        fields = [
+            "id",
+            "title",
+            "sections",
+        ]
 
 
 class ModuleSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(many=True, read_only=True)
+    lessons = LessonSerializer(
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Module
-        fields = ["id", "title", "lessons"]
+        fields = [
+            "id",
+            "title",
+            "lessons",
+        ]
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    """Light version for the cards grid."""
     class Meta:
         model = Course
-        fields = ["id", "slug", "title", "description", "image"]
+        fields = [
+            "id",
+            "slug",
+            "title",
+            "description",
+            "image",
+        ]
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Full version for detail page + player."""
     overview = serializers.SerializerMethodField()
     prerequisites = serializers.SerializerMethodField()
     recommended_reading = serializers.SerializerMethodField()
-    modules = ModuleSerializer(many=True, read_only=True)
+
+    modules = ModuleSerializer(
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Course
         fields = [
-            "id", "slug", "title", "subtitle", "description",
-            "image", "badge_image",
-            "overview", "prerequisites", "recommended_reading",
+            "id",
+            "slug",
+            "title",
+            "subtitle",
+            "description",
+            "image",
+            "badge_image",
+            "overview",
+            "prerequisites",
+            "recommended_reading",
             "modules",
         ]
 
-    def _texts(self, obj, kind):
-        return [t.text for t in obj.texts.filter(kind=kind)]
+    def get_course_texts(self, obj, kind):
+        return [
+            course_text.text
+            for course_text in obj.texts.filter(kind=kind)
+        ]
 
     def get_overview(self, obj):
-        return self._texts(obj, "overview")
+        return self.get_course_texts(obj, "overview")
 
     def get_prerequisites(self, obj):
-        return self._texts(obj, "prerequisite")
+        return self.get_course_texts(obj, "prerequisite")
 
     def get_recommended_reading(self, obj):
-        return self._texts(obj, "reading")
+        return self.get_course_texts(obj, "reading")
 
 
-# ---------- Services ----------
+# =========================================================
+# SERVICES
+# =========================================================
+
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
-        fields = ["id", "title", "icon", "description"]
-        
-# ---------- Labs ----------
+        fields = [
+            "id",
+            "title",
+            "icon",
+            "description",
+        ]
+
+
+# =========================================================
+# LABS
+# =========================================================
+
 class LabSectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = LabSection
-        fields = ["id", "heading", "body", "image", "order"]
+        fields = [
+            "id",
+            "heading",
+            "body",
+            "image",
+            "order",
+        ]
 
 
 class LabListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lab
-        fields = ["id", "slug", "title", "subtitle", "group"]
+        fields = [
+            "id",
+            "slug",
+            "title",
+            "subtitle",
+            "group",
+        ]
 
 
 class LabDetailSerializer(serializers.ModelSerializer):
-    sections = LabSectionSerializer(many=True, read_only=True)
+    sections = LabSectionSerializer(
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Lab
-        fields = ["id", "slug", "title", "subtitle", "sections"]
+        fields = [
+            "id",
+            "slug",
+            "title",
+            "subtitle",
+            "group",
+            "sections",
+        ]
 
 
-# ---------- Writeups ----------
+# =========================================================
+# CTF WRITE-UPS
+# =========================================================
+
 class WriteupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Writeup
-        fields = ["id", "event", "task", "tags", "author", "github_url"]
+        fields = [
+            "id",
+            "event",
+            "task",
+            "tags",
+            "author",
+            "github_url",
+        ]
 
 
-# ---------- Contact ----------
+# =========================================================
+# CONTACT
+# =========================================================
+
 class ContactMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
-        fields = ["name", "email", "subject", "message"]
+        fields = [
+            "name",
+            "email",
+            "subject",
+            "message",
+        ]

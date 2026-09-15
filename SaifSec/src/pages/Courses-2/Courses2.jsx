@@ -22,7 +22,7 @@ import {
 } from "../../utils/courseProgress";
 
 function Courses2() {
-  const { courseId } = useParams(); // this is the slug: cybersecurity-fundamentals
+  const { courseId } = useParams();
   const { data: course, loading, error } = useApiData(`/courses/${courseId}/`);
   const navigate = useNavigate();
   const mainRef = useRef(null);
@@ -40,7 +40,7 @@ function Courses2() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState("light");
 
-  // 1. Init current lesson AFTER api loads
+  // Init current lesson after API loads
   useEffect(() => {
     if (!course || allLessons.length === 0) return;
     if (currentLessonId) return;
@@ -60,12 +60,12 @@ function Courses2() {
   );
   const currentLesson = allLessons[currentIndex];
 
-  // 2. Persist progress
+  // Persist progress changes
   useEffect(() => {
     saveProgress(courseId, progress);
   }, [progress, courseId]);
 
-  // 3. Mark started + open active module
+  // Mark course started + auto-open module dropdown
   useEffect(() => {
     if (!currentLesson) return;
     setProgress((prev) => {
@@ -77,14 +77,13 @@ function Courses2() {
       return { ...prev, started: true, lastLessonId: currentLesson.id };
     });
     setOpenModules((prev) => ({ ...prev, [currentLesson.moduleId]: true }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLesson?.id]);
 
   if (loading) {
     return (
       <div className="course-player-page">
         <div className="player-not-found">
-          <p style={{ color: "#9aa5b5" }}>Loading course...</p>
+          <p style={{ color: "#9aa5b5" }}>Loading course player...</p>
         </div>
       </div>
     );
@@ -107,8 +106,7 @@ function Courses2() {
         <div className="player-not-found">
           <h1>{course.title}</h1>
           <p style={{ color: "#9aa5b5", margin: "12px 0" }}>
-            No lessons published yet. Add Modules + Lessons in Django Admin for
-            slug: {course.slug}
+            No lessons published yet. Add Modules + Lessons in Django Admin.
           </p>
           <Link to={`/courses/${course.slug}`}>← Back to Detail</Link>
         </div>
@@ -120,7 +118,7 @@ function Courses2() {
     return (
       <div className="course-player-page">
         <div className="player-not-found">
-          <h1>Course not found</h1>
+          <h1>Course player error</h1>
           <Link to="/courses">← Back to Courses</Link>
         </div>
       </div>
@@ -156,10 +154,7 @@ function Courses2() {
         ? prev
         : {
             ...prev,
-            completedLessons: [
-              ...prev.completedLessons,
-              currentLesson.id,
-            ],
+            completedLessons: [...prev.completedLessons, currentLesson.id],
           }
     );
     if (!isLast) goNext();
@@ -316,22 +311,31 @@ function Courses2() {
             <h1 className="lesson-title">{currentLesson.title}</h1>
             {sections.length === 0 && (
               <p style={{ color: "#8a96a3" }}>
-                Content for this lesson is not added yet. Edit Lesson in admin
-                → sections JSON.
+                Content for this lesson has not been added yet. Edit Lesson in Django Admin.
               </p>
             )}
             {sections.map((section, idx) => (
               <section key={idx} className="lesson-section">
-                <h2>{section.heading}</h2>
+                {section.heading && <h2>{section.heading}</h2>}
+                
                 {(section.paragraphs || []).map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
-                {(section.bullets || []) && (
+
+                {Array.isArray(section.bullets) && section.bullets.length > 0 && (
                   <ul>
-                    {(section.bullets || []).map((b, i) => (
+                    {section.bullets.map((b, i) => (
                       <li key={i}>{b}</li>
                     ))}
                   </ul>
+                )}
+
+                {section.image && (
+                  <img
+                    src={section.image}
+                    alt={section.heading || currentLesson.title}
+                    className="lesson-section-image"
+                  />
                 )}
               </section>
             ))}

@@ -186,6 +186,18 @@
   opacity: 1;
 }
 
+.lesson-section-image {
+  display: block;
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  margin: 24px 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  object-fit: contain;
+}
+
 .sidebar-progress {
   padding: 12px 14px;
   border-top: 1px solid var(--border);

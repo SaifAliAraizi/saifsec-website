@@ -126,10 +126,8 @@ class Course(TimeStampedModel):
     title = models.CharField(max_length=200)
     subtitle = models.TextField(blank=True)
     description = models.TextField(help_text="Short description shown on the course card")
-    image = models.ImageField(upload_to="courses/", null=True, blank=True,
-                              help_text="Card thumbnail")
-    badge_image = models.ImageField(upload_to="courses/", null=True, blank=True,
-                                    help_text="Large badge/emblem on the detail page")
+    image = models.ImageField(upload_to="courses/", null=True, blank=True, help_text="Card thumbnail")
+    badge_image = models.ImageField(upload_to="courses/", null=True, blank=True, help_text="Large badge/emblem on the detail page")
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -140,7 +138,6 @@ class Course(TimeStampedModel):
 
 
 class CourseText(models.Model):
-    """Overview / Prerequisites / Recommended Reading paragraphs."""
     KINDS = [
         ("overview", "Overview"),
         ("prerequisite", "Prerequisite"),
@@ -176,26 +173,29 @@ class Lesson(models.Model):
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="lessons")
     title = models.CharField(max_length=200)
     order = models.PositiveIntegerField(default=0)
-    # JSON list of sections:
-    # [
-    #   {
-    #     "heading": "Introduction",
-    #     "paragraphs": ["para 1", "para 2"],
-    #     "bullets": ["point 1", "point 2"]
-    #   },
-    #   ...
-    # ]
-    sections = models.JSONField(
-        default=list,
-        blank=True,
-        help_text='JSON list. Each item: {"heading": str, "paragraphs": [str], "bullets": [str]}',
-    )
 
     class Meta:
         ordering = ["order"]
 
     def __str__(self):
-        return self.title
+        return f"{self.module.course.title} / {self.title}"
+
+
+class LessonSection(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="sections")
+    heading = models.CharField(max_length=200, blank=True)
+    body = models.TextField(blank=True, help_text="Separate paragraphs with a blank line.")
+    bullets = models.TextField(blank=True, help_text="Write each bullet point on a new line.")
+    image = models.ImageField(upload_to="lessons/", null=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Lesson Section"
+        verbose_name_plural = "Lesson Sections"
+
+    def __str__(self):
+        return f"{self.lesson.title} / {self.heading or f'Section {self.order}'}"
 
 
 # =========================================================
