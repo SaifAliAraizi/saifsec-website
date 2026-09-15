@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   FaBookOpen,
   FaCheckCircle,
@@ -49,9 +51,7 @@ function Courses2() {
     const exists = allLessons.some(
       (l) => String(l.id) === String(saved.lastLessonId)
     );
-    setCurrentLessonId(
-      exists ? saved.lastLessonId : allLessons[0].id
-    );
+    setCurrentLessonId(exists ? saved.lastLessonId : allLessons[0].id);
   }, [course, allLessons, courseId, currentLessonId]);
 
   const currentIndex = Math.max(
@@ -171,9 +171,6 @@ function Courses2() {
     );
 
   const lessonDone = isLessonDone(currentLesson.id);
-  const sections = Array.isArray(currentLesson.sections)
-    ? currentLesson.sections
-    : [];
 
   return (
     <div className="course-player-page">
@@ -307,38 +304,18 @@ function Courses2() {
             </div>
           )}
 
-          <article className="lesson-article">
+          <article className="lesson-article markdown-body">
             <h1 className="lesson-title">{currentLesson.title}</h1>
-            {sections.length === 0 && (
+            
+            {currentLesson.content ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {currentLesson.content}
+              </ReactMarkdown>
+            ) : (
               <p style={{ color: "#8a96a3" }}>
-                Content for this lesson has not been added yet. Edit Lesson in Django Admin.
+                Write content for this lesson in Django Admin using Markdown.
               </p>
             )}
-            {sections.map((section, idx) => (
-              <section key={idx} className="lesson-section">
-                {section.heading && <h2>{section.heading}</h2>}
-                
-                {(section.paragraphs || []).map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-
-                {Array.isArray(section.bullets) && section.bullets.length > 0 && (
-                  <ul>
-                    {section.bullets.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                )}
-
-                {section.image && (
-                  <img
-                    src={section.image}
-                    alt={section.heading || currentLesson.title}
-                    className="lesson-section-image"
-                  />
-                )}
-              </section>
-            ))}
           </article>
 
           <footer className="lesson-nav">

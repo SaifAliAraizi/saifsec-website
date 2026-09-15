@@ -8,7 +8,6 @@ from .models import (
     CourseText,
     Module,
     Lesson,
-    LessonSection,
     Service,
     Writeup,
     ContactMessage,
@@ -88,55 +87,10 @@ class CertificationSerializer(serializers.ModelSerializer):
 # COURSES
 # =========================================================
 
-class LessonSectionSerializer(serializers.ModelSerializer):
-    paragraphs = serializers.SerializerMethodField()
-    bullets = serializers.SerializerMethodField()
-
-    class Meta:
-        model = LessonSection
-        fields = [
-            "id",
-            "heading",
-            "paragraphs",
-            "bullets",
-            "image",
-            "order",
-        ]
-
-    def get_paragraphs(self, obj):
-        if not obj.body:
-            return []
-
-        return [
-            paragraph.strip()
-            for paragraph in obj.body.split("\n\n")
-            if paragraph.strip()
-        ]
-
-    def get_bullets(self, obj):
-        if not obj.bullets:
-            return []
-
-        return [
-            bullet.strip()
-            for bullet in obj.bullets.splitlines()
-            if bullet.strip()
-        ]
-
-
 class LessonSerializer(serializers.ModelSerializer):
-    sections = LessonSectionSerializer(
-        many=True,
-        read_only=True,
-    )
-
     class Meta:
         model = Lesson
-        fields = [
-            "id",
-            "title",
-            "sections",
-        ]
+        fields = ["id", "title", "content"]
 
 
 class ModuleSerializer(serializers.ModelSerializer):

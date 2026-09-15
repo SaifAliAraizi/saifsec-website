@@ -170,8 +170,22 @@ class Module(models.Model):
 
 
 class Lesson(models.Model):
-    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="lessons")
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+    )
     title = models.CharField(max_length=200)
+
+    content = models.TextField(
+        blank=True,
+        help_text=(
+            "Write this lesson using Markdown. "
+            "Use ## for headings, - for bullet points, "
+            "and ![image description](image-url) for images."
+        ),
+    )
+
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -181,21 +195,37 @@ class Lesson(models.Model):
         return f"{self.module.course.title} / {self.title}"
 
 
-class LessonSection(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="sections")
-    heading = models.CharField(max_length=200, blank=True)
-    body = models.TextField(blank=True, help_text="Separate paragraphs with a blank line.")
-    bullets = models.TextField(blank=True, help_text="Write each bullet point on a new line.")
-    image = models.ImageField(upload_to="lessons/", null=True, blank=True)
+class LessonImage(models.Model):
+    """
+    Optional image uploader for a lesson.
+    Upload here, save, copy the generated Cloudinary URL,
+    then paste it into Lesson.content using Markdown syntax:
+    ![Description](https://res.cloudinary.com/...)
+    """
+
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="images",
+    )
+
+    image = models.ImageField(upload_to="lessons/")
+
+    caption = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Optional caption or image description.",
+    )
+
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["order"]
-        verbose_name = "Lesson Section"
-        verbose_name_plural = "Lesson Sections"
+        verbose_name = "Lesson Image"
+        verbose_name_plural = "Lesson Images"
 
     def __str__(self):
-        return f"{self.lesson.title} / {self.heading or f'Section {self.order}'}"
+        return self.caption or f"Image for {self.lesson.title}"
 
 
 # =========================================================

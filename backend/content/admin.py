@@ -9,14 +9,13 @@ from .models import (
     CourseText,
     Module,
     Lesson,
-    LessonSection,
+    LessonImage,
     Service,
     Writeup,
     ContactMessage,
     Lab,
     LabSection,
 )
-
 
 # =========================================================
 # SITE CONFIG
@@ -147,38 +146,19 @@ class CourseAdmin(admin.ModelAdmin):
     )
 
 
-# Course -> Module -> Lesson -> Lesson Section
-
-class LessonSectionInline(admin.StackedInline):
-    model = LessonSection
+# =========================================================
+# Lessons
+# =========================================================
+class LessonImageInline(admin.TabularInline):
+    model = LessonImage
     extra = 1
-    fields = (
-        "heading",
-        "body",
-        "bullets",
-        "image",
-        "order",
-    )
+    readonly_fields = ("image_url_display",)
 
-
-class LessonInline(admin.TabularInline):
-    model = Lesson
-    extra = 1
-    fields = (
-        "title",
-        "order",
-    )
-
-
-@admin.register(Module)
-class ModuleAdmin(admin.ModelAdmin):
-    list_display = ("title", "course", "order")
-    list_editable = ("order",)
-    list_filter = ("course",)
-    search_fields = ("title", "course__title")
-
-    # Module correctly contains Lessons
-    inlines = [LessonInline]
+    def image_url_display(self, obj):
+        if obj.image:
+            return obj.image.url
+        return "Save to generate Cloudinary URL"
+    image_url_display.short_description = "Copy this URL into your Markdown"
 
 
 @admin.register(Lesson)
@@ -186,10 +166,22 @@ class LessonAdmin(admin.ModelAdmin):
     list_display = ("title", "module", "order")
     list_editable = ("order",)
     list_filter = ("module__course", "module")
-    search_fields = ("title", "module__title")
+    search_fields = ("title",)
+    inlines = [LessonImageInline]
 
-    # Lesson correctly contains Lesson Sections
-    inlines = [LessonSectionInline]
+
+class LessonInline(admin.TabularInline):
+    model = Lesson
+    extra = 1
+    fields = ("title", "order")
+
+
+@admin.register(Module)
+class ModuleAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "order")
+    list_editable = ("order",)
+    list_filter = ("course",)
+    inlines = [LessonInline]
 
 
 # =========================================================
