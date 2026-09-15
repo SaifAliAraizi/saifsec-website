@@ -17,6 +17,7 @@ from .models import (
     LabSection,
 )
 
+
 # =========================================================
 # SITE CONFIG
 # =========================================================
@@ -146,34 +147,23 @@ class CourseAdmin(admin.ModelAdmin):
     )
 
 
-# =========================================================
-# Lessons
-# =========================================================
-class LessonImageInline(admin.TabularInline):
-    model = LessonImage
-    extra = 1
-    readonly_fields = ("image_url_display",)
-
-    def image_url_display(self, obj):
-        if obj.image:
-            return obj.image.url
-        return "Save to generate Cloudinary URL"
-    image_url_display.short_description = "Copy this URL into your Markdown"
-
-
-@admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin):
-    list_display = ("title", "module", "order")
-    list_editable = ("order",)
-    list_filter = ("module__course", "module")
-    search_fields = ("title",)
-    inlines = [LessonImageInline]
-
-
 class LessonInline(admin.TabularInline):
     model = Lesson
     extra = 1
-    fields = ("title", "order")
+    fields = (
+        "title",
+        "order",
+    )
+
+
+class LessonImageInline(admin.TabularInline):
+    model = LessonImage
+    extra = 1
+    fields = (
+        "image",
+        "caption",
+        "order",
+    )
 
 
 @admin.register(Module)
@@ -181,7 +171,47 @@ class ModuleAdmin(admin.ModelAdmin):
     list_display = ("title", "course", "order")
     list_editable = ("order",)
     list_filter = ("course",)
+    search_fields = ("title", "course__title")
+
+    # Module contains lessons
     inlines = [LessonInline]
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "module", "order")
+    list_editable = ("order",)
+    list_filter = ("module__course", "module")
+    search_fields = ("title", "module__title")
+
+    fieldsets = (
+        (
+            "Lesson Details",
+            {
+                "fields": (
+                    "module",
+                    "title",
+                    "order",
+                ),
+            },
+        ),
+        (
+            "Markdown Content",
+            {
+                "fields": (
+                    "content",
+                ),
+                "description": (
+                    "Write normal Markdown here. "
+                    "Use ## heading, - bullet, **bold**, `code`, "
+                    "and ![alt text](image-url) for images."
+                ),
+            },
+        ),
+    )
+
+    # Upload supporting images here.
+    inlines = [LessonImageInline]
 
 
 # =========================================================
@@ -192,19 +222,6 @@ class ModuleAdmin(admin.ModelAdmin):
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ("title", "icon", "order")
     list_editable = ("icon", "order")
-
-
-# =========================================================
-# CTF WRITE-UPS
-# =========================================================
-
-@admin.register(Writeup)
-class WriteupAdmin(admin.ModelAdmin):
-    list_display = ("task", "event", "author", "order")
-    list_editable = ("order",)
-    list_filter = ("event",)
-    search_fields = ("task", "event", "tags")
-    ordering = ("event", "order", "task")
 
 
 # =========================================================
@@ -225,6 +242,19 @@ class LabAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     ordering = ("group", "order")
     inlines = [LabSectionInline]
+
+
+# =========================================================
+# CTF WRITE-UPS
+# =========================================================
+
+@admin.register(Writeup)
+class WriteupAdmin(admin.ModelAdmin):
+    list_display = ("task", "event", "author", "order")
+    list_editable = ("order",)
+    list_filter = ("event",)
+    search_fields = ("task", "event", "tags")
+    ordering = ("event", "order", "task")
 
 
 # =========================================================

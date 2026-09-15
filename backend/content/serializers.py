@@ -5,7 +5,6 @@ from .models import (
     Experience,
     Certification,
     Course,
-    CourseText,
     Module,
     Lesson,
     Service,
@@ -90,14 +89,15 @@ class CertificationSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = ["id", "title", "content"]
+        fields = [
+            "id",
+            "title",
+            "content",
+        ]
 
 
 class ModuleSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(
-        many=True,
-        read_only=True,
-    )
+    lessons = LessonSerializer(many=True, read_only=True)
 
     class Meta:
         model = Module
@@ -125,10 +125,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     prerequisites = serializers.SerializerMethodField()
     recommended_reading = serializers.SerializerMethodField()
 
-    modules = ModuleSerializer(
-        many=True,
-        read_only=True,
-    )
+    modules = ModuleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
@@ -206,10 +203,7 @@ class LabListSerializer(serializers.ModelSerializer):
 
 
 class LabDetailSerializer(serializers.ModelSerializer):
-    sections = LabSectionSerializer(
-        many=True,
-        read_only=True,
-    )
+    sections = LabSectionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Lab
