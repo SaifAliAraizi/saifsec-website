@@ -34,6 +34,7 @@ const KNOWN_CATEGORIES = [
   "OSINT",
   "Steganography",
   "Networking",
+  "Artificial Intelligence"
 ];
 
 const CATEGORY_ICONS = {
